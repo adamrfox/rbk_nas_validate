@@ -9,6 +9,7 @@ import urllib3
 urllib3.disable_warnings()
 import datetime
 import pytz
+import re
 
 def usage():
     print ("Usage goes here")
@@ -26,7 +27,6 @@ def dprint (message):
     if DEBUG:
         print(message)
 
-
 if __name__ == "__main__":
     user = ""
     password = ""
@@ -39,7 +39,7 @@ if __name__ == "__main__":
     backup = ""
     latest = False
     snap_list = []
-
+    files = {}
 
     optlist,args = getopt.getopt(sys.argv[1:], 'hDc:b:d:f:l', ['--help', '--DEBUG', '--creds=', '--backup=', '--date=', '--fileset=', '--latest'])
     for opt, a in optlist:
@@ -59,6 +59,7 @@ if __name__ == "__main__":
             latest = True
 
     (local_path, rubrik_addr) = args
+    mp_regex = r"^" + re.escape(local_path)
     if not backup:
         backup = python_input("Backup (host:share): ")
     if not fileset:
@@ -115,15 +116,11 @@ if __name__ == "__main__":
             valid = True
     dprint("SnapID: " + snap_id)
     for dirName, subDirList, fileList in os.walk(local_path):
-        print("DIR: " + dirName)
-        for fname in fileList:
-            print ("\t " + fname)
-
-
-
-
-
-
-
-
-
+        subDirList[:] = [d for d in subDirList if ".snapshot" not in d and "~snapshot" not in d]
+        for dir in subDirList:
+            name = dirName + delim + dir
+            print("Adding Dir " + name)
+            files[name] = re.sub(mp_regex, '', name)
+        for file in fileList:
+            name = dirName + delim + file
+            files[name] = re.sub(mp_regex, '', name)

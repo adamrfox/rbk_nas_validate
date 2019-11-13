@@ -119,8 +119,17 @@ if __name__ == "__main__":
         subDirList[:] = [d for d in subDirList if ".snapshot" not in d and "~snapshot" not in d]
         for dir in subDirList:
             name = dirName + delim + dir
-            print("Adding Dir " + name)
             files[name] = re.sub(mp_regex, '', name)
         for file in fileList:
             name = dirName + delim + file
             files[name] = re.sub(mp_regex, '', name)
+    for f in files.keys():
+        found = False
+        f_search = rubrik.get('v1', '/fileset/' + str(fs_id) + '/search?path=' + str(files[f]))
+        for f_inst in f_search['data']:
+            if f_inst['path'] == files[f]:
+                for snap in f_inst['fileVersions']:
+                    if snap['snapshotId'] == snap_id:
+                        found = True
+                        break
+        print (f + " : " + str(found))

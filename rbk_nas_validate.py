@@ -28,6 +28,17 @@ def dprint (message):
     if DEBUG:
         print(message)
 
+def vprint (message):
+    if VERBOSE or DEBUG:
+        print (message)
+
+def write_output (fh, message):
+    if fh:
+        fh.write(message + "\n")
+    else:
+        print(message)
+
+
 def validate_file (file, fs_id, snap_id):
     found = False
     f_search = rubrik.get('v1', '/fileset/' + fs_id + '/search?path=' + file, timeout=60)
@@ -43,6 +54,7 @@ if __name__ == "__main__":
     user = ""
     password = ""
     DEBUG = False
+    VERBOSE = False
     outfile = ""
     host = ""
     fileset = ""
@@ -51,13 +63,16 @@ if __name__ == "__main__":
     backup = ""
     latest = False
     snap_list = []
+    outfile = ""
+    fh = ""
 
-    optlist,args = getopt.getopt(sys.argv[1:], 'hDc:b:d:f:l', ['--help', '--DEBUG', '--creds=', '--backup=', '--date=', '--fileset=', '--latest'])
+    optlist,args = getopt.getopt(sys.argv[1:], 'hDc:b:d:f:lvo:', ['--help', '--DEBUG', '--creds=', '--backup=', '--date=', '--fileset=', '--latest', '--verbose', '--outfile'])
     for opt, a in optlist:
         if opt in ('-h', '--help'):
             usage()
         if opt in ('-D', '--DEBUG'):
             DEBUG = True
+            VERBOSE = True
         if opt in ('-c', '--creds'):
             (user, password) = a.split(':')
         if opt in ('-b', '--backup'):
@@ -68,6 +83,11 @@ if __name__ == "__main__":
             fileset = a
         if opt in ('-l', '--latest'):
             latest = True
+        if opt in ('-v', '--verbose'):
+            VERBOSE = True
+        if opt in ('-o', '--outfile'):
+            outfile = a
+            fh = open(outfile, "w+")
 
     (local_path, rubrik_addr) = args
     mp_regex = r"^" + re.escape(local_path)
@@ -135,14 +155,18 @@ if __name__ == "__main__":
             if not file_inst.startswith(delim):
                 file_inst = delim + file_inst
             valid = validate_file(file_inst, str(fs_id), str(snap_id))
-            print (name, " : " + str(valid))
+            out_message = name + ',' + str(valid)
+            if not valid or (valid and VERBOSE):
+                write_output (fh, out_message)
         for file in fileList:
             name = dirName + delim + file
             file_inst = re.sub(mp_regex, '', name)
             if not file_inst.startswith(delim):
                 file_inst = delim + file_inst
             valid = validate_file(file_inst, str(fs_id), str(snap_id))
-            print (name, " : " +  str(valid))
+            out_message = name + ',' + str(valid)
+            if not valid or (valid and VERBOSE):
+                write_output (fh, out_message)
 '''
     for f in files.keys():
         found = False

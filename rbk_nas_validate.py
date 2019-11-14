@@ -11,6 +11,7 @@ import datetime
 import pytz
 import re
 
+
 def usage():
     print ("Usage goes here")
     exit(0)
@@ -27,6 +28,17 @@ def dprint (message):
     if DEBUG:
         print(message)
 
+def validate_file (file, fs_id, snap_id):
+    found = False
+    f_search = rubrik.get('v1', '/fileset/' + fs_id + '/search?path=' + file, timeout=60)
+    for f_inst in f_search['data']:
+        if f_inst['path'] == file:
+            for snap in f_inst['fileVersions']:
+                if snap['snapshotId'] == snap_id:
+                    found = True
+                    break
+    return(found)
+
 if __name__ == "__main__":
     user = ""
     password = ""
@@ -39,7 +51,6 @@ if __name__ == "__main__":
     backup = ""
     latest = False
     snap_list = []
-    files = {}
 
     optlist,args = getopt.getopt(sys.argv[1:], 'hDc:b:d:f:l', ['--help', '--DEBUG', '--creds=', '--backup=', '--date=', '--fileset=', '--latest'])
     for opt, a in optlist:
@@ -119,10 +130,15 @@ if __name__ == "__main__":
         subDirList[:] = [d for d in subDirList if ".snapshot" not in d and "~snapshot" not in d]
         for dir in subDirList:
             name = dirName + delim + dir
-            files[name] = re.sub(mp_regex, '', name)
+            file_inst = re.sub(mp_regex, '', name)
+            valid = validate_file(file_inst, str(fs_id), str(snap_id))
+            print (name, " : " + str(valid))
         for file in fileList:
             name = dirName + delim + file
-            files[name] = re.sub(mp_regex, '', name)
+            file_inst = re.sub(mp_regex, '', name)
+            valid = validate_file(file_inst, str(fs_id), str(snap_id))
+            print (name, " : " +  str(valid))
+'''
     for f in files.keys():
         found = False
         f_search = rubrik.get('v1', '/fileset/' + str(fs_id) + '/search?path=' + str(files[f]))
@@ -133,3 +149,4 @@ if __name__ == "__main__":
                         found = True
                         break
         print (f + " : " + str(found))
+'''

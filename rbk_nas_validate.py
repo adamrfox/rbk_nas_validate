@@ -84,7 +84,8 @@ if __name__ == "__main__":
         delim = "/"
     else:
         delim = "\\"
-
+        if not local_path.endswith(delim):
+            local_path += delim
     rubrik = rubrik_cdm.Connect(rubrik_addr, user, password)
     rubrik_config = rubrik.get('v1','/cluster/me')
     rubrik_tz = rubrik_config['timezone']['timezone']
@@ -131,11 +132,15 @@ if __name__ == "__main__":
         for dir in subDirList:
             name = dirName + delim + dir
             file_inst = re.sub(mp_regex, '', name)
+            if not file_inst.startswith(delim):
+                file_inst = delim + file_inst
             valid = validate_file(file_inst, str(fs_id), str(snap_id))
             print (name, " : " + str(valid))
         for file in fileList:
             name = dirName + delim + file
             file_inst = re.sub(mp_regex, '', name)
+            if not file_inst.startswith(delim):
+                file_inst = delim + file_inst
             valid = validate_file(file_inst, str(fs_id), str(snap_id))
             print (name, " : " +  str(valid))
 '''

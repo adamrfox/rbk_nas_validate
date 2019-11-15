@@ -13,7 +13,18 @@ import re
 
 
 def usage():
-    print ("Usage goes here")
+    sys.stderr.write("Usage: rbk_nas_validate.py [-hDlv] [-c creds] [-b backup] [-d date] [-f fileset] [-o output_file] local_path rubrik\n")
+    sys.stderr.write("-h | --help : Prints this message\n")
+    sys.stderr.write("-D | --DEBUG : Prints debug information\n")
+    sys.stderr.write("-l | --latest : Use the latest backup\n")
+    sys.stderr.write("-v | --versboe : Verbose output.  Shows validated files\n")
+    sys.stderr.write("-c | --creds= : Specify Rubrik credentials [user:password\n")
+    sys.stderr.write("-b | --backup= : Specify the Rubrik backup [host:share]\n")
+    sys.stderr.write("-d | --date= : Specify datestamp of backup\n")
+    sys.stderr.write("-f | --fileset= : Specify fileset of backup\n")
+    sys.stderr.write("-o | --outfile= : Send output to a file\n")
+    sys.stderr.write("local_path : Local Path of NAS share\n")
+    sys.stderr.write("rubrik: Name or IP of Rubrik cluster\n")
     exit(0)
 
 
@@ -88,8 +99,10 @@ if __name__ == "__main__":
         if opt in ('-o', '--outfile'):
             outfile = a
             fh = open(outfile, "w+")
-
-    (local_path, rubrik_addr) = args
+    try:
+        (local_path, rubrik_addr) = args
+    except ValueError:
+        usage()
     mp_regex = r"^" + re.escape(local_path)
     if not backup:
         backup = python_input("Backup (host:share): ")

@@ -153,7 +153,10 @@ if __name__ == "__main__":
             valid_s = "Missing!"
             name = dirName + delim + dir
             try:
-                os.chdir(name)
+                if delim == "/":
+                    os.chdir(name)
+                else:
+                    os.listdir(name)
             except OSError as e:
                 write_output(fh, name + ',' + str(e))
                 continue

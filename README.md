@@ -24,3 +24,8 @@ Any of the inputs not specified on the command line will cause the script to pro
 The format for the date is "YY-MM-DD HH:MM:SS".  Use quotes due to the space.  Or use -l for the latest backup.
 
 The output is a csv format.
+
+The script is written in Python.  It works in Python 2.7 or 3.x.  The Rubrik SDK is required as well.  This can be installed via pip:
+
+pip install rubrik-cdm
+

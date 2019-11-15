@@ -150,32 +150,31 @@ if __name__ == "__main__":
     for dirName, subDirList, fileList in os.walk(local_path):
         subDirList[:] = [d for d in subDirList if ".snapshot" not in d and "~snapshot" not in d]
         for dir in subDirList:
+            valid_s = "Missing!"
             name = dirName + delim + dir
+            try:
+                os.chdir(name)
+            except OSError as e:
+                write_output(fh, name + ',' + str(e))
+                continue
             file_inst = re.sub(mp_regex, '', name)
             if not file_inst.startswith(delim):
                 file_inst = delim + file_inst
             valid = validate_file(file_inst, str(fs_id), str(snap_id))
-            out_message = name + ',' + str(valid)
+            if valid:
+                valid_s = "Validated"
+            out_message = name + ',' + valid_s
             if not valid or (valid and VERBOSE):
                 write_output (fh, out_message)
         for file in fileList:
+            valid_s = "Missing!"
             name = dirName + delim + file
             file_inst = re.sub(mp_regex, '', name)
             if not file_inst.startswith(delim):
                 file_inst = delim + file_inst
             valid = validate_file(file_inst, str(fs_id), str(snap_id))
-            out_message = name + ',' + str(valid)
+            if valid:
+                valid_s = "Validated"
+            out_message = name + ',' + valid_s
             if not valid or (valid and VERBOSE):
                 write_output (fh, out_message)
-'''
-    for f in files.keys():
-        found = False
-        f_search = rubrik.get('v1', '/fileset/' + str(fs_id) + '/search?path=' + str(files[f]))
-        for f_inst in f_search['data']:
-            if f_inst['path'] == files[f]:
-                for snap in f_inst['fileVersions']:
-                    if snap['snapshotId'] == snap_id:
-                        found = True
-                        break
-        print (f + " : " + str(found))
-'''

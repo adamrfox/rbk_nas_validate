@@ -74,6 +74,8 @@ if __name__ == "__main__":
     backup = ""
     latest = False
     snap_list = []
+    snap_id = ""
+    share_id = ""
     outfile = ""
     fh = ""
 
@@ -149,16 +151,25 @@ if __name__ == "__main__":
         snap_id = snap_list[-1][0]
     else:
         for i, snap in enumerate(snap_list):
-            print (str(i) + ": " + snap[1] + "  [" + snap[0] + "]")
+            if date:
+                if snap[1] == date:
+                    snap_id = snap[0]
+                    break
+            else:
+                print (str(i) + ": " + snap[1] + "  [" + snap[0] + "]")
         valid = False
-        while not valid:
-            snap_index = python_input("Select Backup: ")
-            try:
-                snap_id = snap_list[int(snap_index)][0]
-            except (IndexError, TypeError, ValueError) as e:
-                print ("Invalid Index: " + str(e))
-                continue
-            valid = True
+        if not snap_id and not date:
+            while not valid:
+                snap_index = python_input("Select Backup: ")
+                try:
+                    snap_id = snap_list[int(snap_index)][0]
+                except (IndexError, TypeError, ValueError) as e:
+                    print ("Invalid Index: " + str(e))
+                    continue
+                valid = True
+        elif not snap_id and date:
+            sys.stderr.write("Backup with date: " + date + " not found.\n")
+            exit(2)
     dprint("SnapID: " + snap_id)
     for dirName, subDirList, fileList in os.walk(local_path):
         subDirList[:] = [d for d in subDirList if ".snapshot" not in d and "~snapshot" not in d]

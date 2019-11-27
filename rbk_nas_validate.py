@@ -29,7 +29,7 @@ def usage():
 
 
 def python_input (message):
-    if sys.version < 3:
+    if int(sys.version[0]) > 2:
         value = input (message)
     else:
         value = raw_input(message)

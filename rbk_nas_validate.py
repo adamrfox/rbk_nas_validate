@@ -50,11 +50,11 @@ def write_output (fh, message):
         print(message)
 
 
-def validate_file (file, fs_id, snap_id):
+def validate_file (file_inst, fs_id, snap_id):
     found = False
-    f_search = rubrik.get('v1', '/fileset/' + fs_id + '/search?path=' + file, timeout=60)
+    f_search = rubrik.get('v1', '/fileset/' + fs_id + '/search?path=' + file_inst, timeout=60)
     for f_inst in f_search['data']:
-        if f_inst['path'] == file:
+        if f_inst['path'] == file_inst:
             for snap in f_inst['fileVersions']:
                 if snap['snapshotId'] == snap_id:
                     found = True
@@ -175,7 +175,10 @@ if __name__ == "__main__":
         subDirList[:] = [d for d in subDirList if ".snapshot" not in d and "~snapshot" not in d]
         for dir in subDirList:
             valid_s = "Missing!"
-            name = dirName + delim + dir
+            if dirName.endswith(delim):
+                name = dirName + dir
+            else:
+                name = dirName + delim + dir
             try:
                 if delim == "/":
                     os.chdir(name)

@@ -10,7 +10,7 @@ urllib3.disable_warnings()
 import datetime
 import pytz
 import re
-
+import threading
 
 def usage():
     sys.stderr.write("Usage: rbk_nas_validate.py [-hDlv] [-c creds] [-b backup] [-d date] [-f fileset] [-o output_file] local_path rubrik\n")
@@ -61,6 +61,25 @@ def validate_file (file, fs_id, snap_id):
                     break
     return(found)
 
+def get_thread_paths(local_path, path_file):
+    path_list = []
+    root_file_list = []
+
+    if paths_file:
+        ph = open(path_file)
+        paths = ph.readlines()
+        for p in paths:
+            path_list.append(p.rstrip('\n'))
+    root_dir = os.listdir(local_path)
+    for de in root_dir:
+        full_path = local_path + delim + de
+        if os.path.isfile(full_path):
+            root_file_list.append(full_path)
+        elif os.path.isdir(de) and not paths_file:
+            path_list.append(de)
+    return(root_file_list, path_list)
+
+
 if __name__ == "__main__":
     user = ""
     password = ""
@@ -78,8 +97,13 @@ if __name__ == "__main__":
     share_id = ""
     outfile = ""
     fh = ""
+    MAX_THREADS = 10
+    print_lock = threading.Lock()
+    paths_file = ""
+    paths = []
+    root_files = []
 
-    optlist,args = getopt.getopt(sys.argv[1:], 'hDc:b:d:f:lvo:', ['--help', '--DEBUG', '--creds=', '--backup=', '--date=', '--fileset=', '--latest', '--verbose', '--outfile'])
+    optlist,args = getopt.getopt(sys.argv[1:], 'hDc:b:d:f:lvot:p:', ['--help', '--DEBUG', '--creds=', '--backup=', '--date=', '--fileset=', '--latest', '--verbose', '--outfile', '--threads=', '--paths='])
     for opt, a in optlist:
         if opt in ('-h', '--help'):
             usage()
@@ -101,6 +125,11 @@ if __name__ == "__main__":
         if opt in ('-o', '--outfile'):
             outfile = a
             fh = open(outfile, "w+")
+        if opt in ('-t', '--threads'):
+            MAX_THREADS = int(a)
+        if opt in ('-p', '--paths'):
+            paths_file = a
+
     try:
         (local_path, rubrik_addr) = args
     except ValueError:
@@ -171,6 +200,8 @@ if __name__ == "__main__":
             sys.stderr.write("Backup with date: " + date + " not found.\n")
             exit(2)
     dprint("SnapID: " + snap_id)
+    (root_files, paths) = get_thread_paths(local_path, paths_file)
+
     for dirName, subDirList, fileList in os.walk(local_path):
         subDirList[:] = [d for d in subDirList if ".snapshot" not in d and "~snapshot" not in d]
         for dir in subDirList:

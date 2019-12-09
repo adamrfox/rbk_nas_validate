@@ -56,6 +56,7 @@ def validate_file (file_inst, fs_id, snap_id):
     try:
         f_search = rubrik.get('v1', '/fileset/' + fs_id + '/search?path=' + file_inst, timeout=60)
     except Exception as e:
+        valid_s = "RBK: " + e
         return (found, valid_s)
     for f_inst in f_search['data']:
         if f_inst['path'] == file_inst:

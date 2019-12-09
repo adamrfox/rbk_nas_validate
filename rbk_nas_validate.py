@@ -52,14 +52,18 @@ def write_output (fh, message):
 
 def validate_file (file_inst, fs_id, snap_id):
     found = False
-    f_search = rubrik.get('v1', '/fileset/' + fs_id + '/search?path=' + file_inst, timeout=60)
+    valid_s = "Missing!"
+    try:
+        f_search = rubrik.get('v1', '/fileset/' + fs_id + '/search?path=' + file_inst, timeout=60)
+    except Exception as e:
+        return (found, valid_s)
     for f_inst in f_search['data']:
         if f_inst['path'] == file_inst:
             for snap in f_inst['fileVersions']:
                 if snap['snapshotId'] == snap_id:
                     found = True
                     break
-    return(found)
+    return(found, valid_s)
 
 if __name__ == "__main__":
     user = ""
@@ -190,7 +194,7 @@ if __name__ == "__main__":
             file_inst = re.sub(mp_regex, '', name)
             if not file_inst.startswith(delim):
                 file_inst = delim + file_inst
-            valid = validate_file(file_inst, str(fs_id), str(snap_id))
+            (valid,valid_s) = validate_file(file_inst, str(fs_id), str(snap_id))
             if valid:
                 valid_s = "Validated"
             out_message = name + ',' + valid_s
@@ -202,7 +206,7 @@ if __name__ == "__main__":
             file_inst = re.sub(mp_regex, '', name)
             if not file_inst.startswith(delim):
                 file_inst = delim + file_inst
-            valid = validate_file(file_inst, str(fs_id), str(snap_id))
+            (valid, valid_s) = validate_file(file_inst, str(fs_id), str(snap_id))
             if valid:
                 valid_s = "Validated"
             out_message = name + ',' + valid_s
